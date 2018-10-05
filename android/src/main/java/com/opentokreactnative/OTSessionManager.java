@@ -289,9 +289,13 @@ public class OTSessionManager extends ReactContextBaseJavaModule
     @ReactMethod
     public void sendSignal(ReadableMap signal, Callback callback) {
 
-        Session mSession = sharedState.getSession();
-        mSession.sendSignal(signal.getString("type"), signal.getString("data"));
-        callback.invoke();
+        String type =  signal.getString("type");
+        String data = signal.getString("data");
+        if(type != null && data != null) {
+          Session mSession = sharedState.getSession();
+          mSession.sendSignal(type, data);
+          callback.invoke();
+        }
     }
 
     @ReactMethod
@@ -328,12 +332,15 @@ public class OTSessionManager extends ReactContextBaseJavaModule
         Session mSession = sharedState.getSession();
         WritableMap sessionInfo = Arguments.createMap();
         int connectionStatus = getConnectionStatus();
-        sessionInfo.putString("sessionId", mSession.getSessionId());
-        if (connectionStatus == 1) {
+        String sessionId = mSession.getSessionId();
+        if(sessionId != null) {
+          sessionInfo.putString("sessionId", sessionId);
+          if (connectionStatus == 1) {
             sessionInfo.putMap("connection", prepareConnectionMap(mSession.getConnection()));
+          }
+          sessionInfo.putInt("connectionStatus", connectionStatus);
+          callback.invoke(sessionInfo);
         }
-        sessionInfo.putInt("connectionStatus", connectionStatus);
-        callback.invoke(sessionInfo);
     }
 
     private boolean contains(ArrayList array, String value) {
