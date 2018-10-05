@@ -143,11 +143,14 @@ public class OTSessionManager extends ReactContextBaseJavaModule
     public void publish(String publisherId, Callback callback) {
 
         Session mSession = sharedState.getSession();
-        ConcurrentHashMap<String, Publisher> mPublishers = sharedState.getPublishers();
-        Publisher mPublisher = mPublishers.get(publisherId);
-        mSession.publish(mPublisher);
-        callback.invoke();
-
+        if(mSession != null) {
+           ConcurrentHashMap<String, Publisher> mPublishers = sharedState.getPublishers();
+           Publisher mPublisher = mPublishers.get(publisherId);
+           if(mPublisher != null) {
+               mSession.publish(mPublisher);
+               callback.invoke();
+           }
+        }
     }
 
     @ReactMethod
