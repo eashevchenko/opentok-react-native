@@ -329,10 +329,12 @@ public class OTSessionManager extends ReactContextBaseJavaModule
     @ReactMethod
     public void getSessionInfo(Callback callback) {
 
-        Session mSession = sharedState.getSession();
+      Session mSession = sharedState.getSession();
+      if (mSession != null) {
         WritableMap sessionInfo = Arguments.createMap();
         int connectionStatus = getConnectionStatus();
         String sessionId = mSession.getSessionId();
+
         if(sessionId != null) {
           sessionInfo.putString("sessionId", sessionId);
           if (connectionStatus == 1) {
@@ -341,6 +343,7 @@ public class OTSessionManager extends ReactContextBaseJavaModule
           sessionInfo.putInt("connectionStatus", connectionStatus);
           callback.invoke(sessionInfo);
         }
+      }
     }
 
     private boolean contains(ArrayList array, String value) {
