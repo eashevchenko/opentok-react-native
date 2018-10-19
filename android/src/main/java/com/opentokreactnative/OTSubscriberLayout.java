@@ -25,8 +25,6 @@ public class OTSubscriberLayout extends FrameLayout{
     public void createSubscriberView(String streamId) {
 
         ConcurrentHashMap<String, Subscriber> mSubscribers = sharedState.getSubscribers();
-        mSubscribers.get(streamId).setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,
-                BaseVideoRenderer.STYLE_VIDEO_FILL);
         FrameLayout mSubscriberViewContainer = new FrameLayout(getContext());
         ConcurrentHashMap<String, FrameLayout> mSubscriberViewContainers = sharedState.getSubscriberViewContainers();
         mSubscriberViewContainers.put(streamId, mSubscriberViewContainer);

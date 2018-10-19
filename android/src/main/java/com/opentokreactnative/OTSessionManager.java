@@ -21,6 +21,7 @@ import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableArray;
 
+import com.opentok.android.BaseVideoRenderer;
 import com.opentok.android.Session;
 import com.opentok.android.Connection;
 import com.opentok.android.Publisher;
@@ -47,7 +48,7 @@ public class OTSessionManager extends ReactContextBaseJavaModule
         SubscriberKit.AudioLevelListener,
         SubscriberKit.AudioStatsListener,
         SubscriberKit.VideoStatsListener,
-        SubscriberKit.VideoListener{
+        SubscriberKit.VideoListener {
 
     private Callback connectCallback;
     private Callback disconnectCallback;
@@ -107,24 +108,24 @@ public class OTSessionManager extends ReactContextBaseJavaModule
             View view = getCurrentActivity().getWindow().getDecorView().getRootView();
             OTScreenCapturer capturer = new OTScreenCapturer(view);
             mPublisher = new Publisher.Builder(this.getReactApplicationContext())
-                                        .audioTrack(audioTrack)
-                                        .videoTrack(videoTrack)
-                                        .name(name)
-                                        .audioBitrate(audioBitrate)
-                                        .resolution(Publisher.CameraCaptureResolution.valueOf(resolution))
-                                        .frameRate(Publisher.CameraCaptureFrameRate.valueOf(frameRate))
-                                        .capturer(capturer)
-                                        .build();
+                    .audioTrack(audioTrack)
+                    .videoTrack(videoTrack)
+                    .name(name)
+                    .audioBitrate(audioBitrate)
+                    .resolution(Publisher.CameraCaptureResolution.valueOf(resolution))
+                    .frameRate(Publisher.CameraCaptureFrameRate.valueOf(frameRate))
+                    .capturer(capturer)
+                    .build();
             mPublisher.setPublisherVideoType(PublisherKit.PublisherKitVideoType.PublisherKitVideoTypeScreen);
         } else {
             mPublisher = new Publisher.Builder(this.getReactApplicationContext())
-                                        .audioTrack(audioTrack)
-                                        .videoTrack(videoTrack)
-                                        .name(name)
-                                        .audioBitrate(audioBitrate)
-                                        .resolution(Publisher.CameraCaptureResolution.valueOf(resolution))
-                                        .frameRate(Publisher.CameraCaptureFrameRate.valueOf(frameRate))
-                                        .build();
+                    .audioTrack(audioTrack)
+                    .videoTrack(videoTrack)
+                    .name(name)
+                    .audioBitrate(audioBitrate)
+                    .resolution(Publisher.CameraCaptureResolution.valueOf(resolution))
+                    .frameRate(Publisher.CameraCaptureFrameRate.valueOf(frameRate))
+                    .build();
             if (cameraPosition.equals("back")) {
                 mPublisher.cycleCamera();
             }
@@ -143,13 +144,13 @@ public class OTSessionManager extends ReactContextBaseJavaModule
     public void publish(String publisherId, Callback callback) {
 
         Session mSession = sharedState.getSession();
-        if(mSession != null) {
-           ConcurrentHashMap<String, Publisher> mPublishers = sharedState.getPublishers();
-           Publisher mPublisher = mPublishers.get(publisherId);
-           if(mPublisher != null) {
-               mSession.publish(mPublisher);
-               callback.invoke();
-           }
+        if (mSession != null) {
+            ConcurrentHashMap<String, Publisher> mPublishers = sharedState.getPublishers();
+            Publisher mPublisher = mPublishers.get(publisherId);
+            if (mPublisher != null) {
+                mSession.publish(mPublisher);
+                callback.invoke();
+            }
         }
     }
 
@@ -166,6 +167,7 @@ public class OTSessionManager extends ReactContextBaseJavaModule
         mSubscriber.setAudioStatsListener(this);
         mSubscriber.setVideoStatsListener(this);
         mSubscriber.setVideoListener(this);
+        mSubscriber.setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
         mSubscriber.setSubscribeToAudio(properties.getBoolean("subscribeToAudio"));
         mSubscriber.setSubscribeToVideo(properties.getBoolean("subscribeToVideo"));
         mSubscribers.put(streamId, mSubscriber);
@@ -178,27 +180,27 @@ public class OTSessionManager extends ReactContextBaseJavaModule
     public void removeSubscriber(final String streamId, final Callback callback) {
 
         UiThreadUtil.runOnUiThread(new Runnable() {
-       @Override
-       public void run() {
+            @Override
+            public void run() {
 
-           String mStreamId = streamId;
-           Callback mCallback = callback;
-           ConcurrentHashMap<String, Subscriber> mSubscribers = sharedState.getSubscribers();
-           ConcurrentHashMap<String, Stream> mSubscriberStreams = sharedState.getSubscriberStreams();
-           ConcurrentHashMap<String, FrameLayout> mSubscriberViewContainers = sharedState.getSubscriberViewContainers();
-           Subscriber mSubscriber = mSubscribers.get(mStreamId);
-           FrameLayout mSubscriberViewContainer = mSubscriberViewContainers.get(mStreamId);
-           if (mSubscriberViewContainer != null) {
-               mSubscriberViewContainer.removeAllViews();
-           }
-           mSubscriberViewContainers.remove(mStreamId);
-           mSubscriber.destroy();
-           mSubscribers.remove(mStreamId);
-           mSubscriberStreams.remove(mStreamId);
-           mCallback.invoke();
+                String mStreamId = streamId;
+                Callback mCallback = callback;
+                ConcurrentHashMap<String, Subscriber> mSubscribers = sharedState.getSubscribers();
+                ConcurrentHashMap<String, Stream> mSubscriberStreams = sharedState.getSubscriberStreams();
+                ConcurrentHashMap<String, FrameLayout> mSubscriberViewContainers = sharedState.getSubscriberViewContainers();
+                Subscriber mSubscriber = mSubscribers.get(mStreamId);
+                FrameLayout mSubscriberViewContainer = mSubscriberViewContainers.get(mStreamId);
+                if (mSubscriberViewContainer != null) {
+                    mSubscriberViewContainer.removeAllViews();
+                }
+                mSubscriberViewContainers.remove(mStreamId);
+                mSubscriber.destroy();
+                mSubscribers.remove(mStreamId);
+                mSubscriberStreams.remove(mStreamId);
+                mCallback.invoke();
 
-       }
-     });
+            }
+        });
     }
 
     @ReactMethod
@@ -217,7 +219,9 @@ public class OTSessionManager extends ReactContextBaseJavaModule
 
         ConcurrentHashMap<String, Publisher> mPublishers = sharedState.getPublishers();
         Publisher mPublisher = mPublishers.get(publisherId);
-        mPublisher.setPublishAudio(publishAudio);
+        if (mPublisher != null) {
+            mPublisher.setPublishAudio(publishAudio);
+        }
     }
 
     @ReactMethod
@@ -225,7 +229,9 @@ public class OTSessionManager extends ReactContextBaseJavaModule
 
         ConcurrentHashMap<String, Publisher> mPublishers = sharedState.getPublishers();
         Publisher mPublisher = mPublishers.get(publisherId);
-        mPublisher.setPublishVideo(publishVideo);
+        if (mPublisher != null) {
+            mPublisher.setPublishVideo(publishVideo);
+        }
     }
 
     @ReactMethod
@@ -253,8 +259,10 @@ public class OTSessionManager extends ReactContextBaseJavaModule
 
         ConcurrentHashMap<String, Publisher> mPublishers = sharedState.getPublishers();
         Publisher mPublisher = mPublishers.get(publisherId);
-        mPublisher.cycleCamera();
-        Log.i(TAG, "Changing camera to " + cameraPosition);
+        if (mPublisher != null) {
+            mPublisher.cycleCamera();
+            Log.i(TAG, "Changing camera to " + cameraPosition);
+        }
     }
 
     @ReactMethod
@@ -292,14 +300,14 @@ public class OTSessionManager extends ReactContextBaseJavaModule
     @ReactMethod
     public void sendSignal(ReadableMap signal, Callback callback) {
 
-        String type =  signal.getString("type");
+        String type = signal.getString("type");
         String data = signal.getString("data");
-        if(type != null && data != null) {
-          Session mSession = sharedState.getSession();
-          if(mSession != null) {
-              mSession.sendSignal(type, data);
-              callback.invoke();
-          }
+        if (type != null && data != null) {
+            Session mSession = sharedState.getSession();
+            if (mSession != null) {
+                mSession.sendSignal(type, data);
+                callback.invoke();
+            }
         }
     }
 
@@ -323,7 +331,11 @@ public class OTSessionManager extends ReactContextBaseJavaModule
                 if (mSession != null) {
                     mSession.unpublish(mPublisher);
                 }
-                mPublisher.destroy();
+
+                if (mPublisher != null) {
+                    mPublisher.destroy();
+                }
+
                 mPublishers.remove(publisherId);
                 mCallback.invoke();
 
@@ -334,21 +346,21 @@ public class OTSessionManager extends ReactContextBaseJavaModule
     @ReactMethod
     public void getSessionInfo(Callback callback) {
 
-      Session mSession = sharedState.getSession();
-      if (mSession != null) {
-        WritableMap sessionInfo = Arguments.createMap();
-        int connectionStatus = getConnectionStatus();
-        String sessionId = mSession.getSessionId();
+        Session mSession = sharedState.getSession();
+        if (mSession != null) {
+            WritableMap sessionInfo = Arguments.createMap();
+            int connectionStatus = getConnectionStatus();
+            String sessionId = mSession.getSessionId();
 
-        if(sessionId != null) {
-          sessionInfo.putString("sessionId", sessionId);
-          if (connectionStatus == 1) {
-            sessionInfo.putMap("connection", prepareConnectionMap(mSession.getConnection()));
-          }
-          sessionInfo.putInt("connectionStatus", connectionStatus);
-          callback.invoke(sessionInfo);
+            if (sessionId != null) {
+                sessionInfo.putString("sessionId", sessionId);
+                if (connectionStatus == 1) {
+                    sessionInfo.putMap("connection", prepareConnectionMap(mSession.getConnection()));
+                }
+                sessionInfo.putInt("connectionStatus", connectionStatus);
+                callback.invoke(sessionInfo);
+            }
         }
-      }
     }
 
     private boolean contains(ArrayList array, String value) {
@@ -386,7 +398,7 @@ public class OTSessionManager extends ReactContextBaseJavaModule
     private WritableMap prepareConnectionMap(Connection connection) {
 
         WritableMap connectionInfo = Arguments.createMap();
-        if(connection != null) {
+        if (connection != null) {
             connectionInfo.putString("connectionId", connection.getConnectionId());
             connectionInfo.putString("creationTime", connection.getCreationTime().toString());
             connectionInfo.putString("data", connection.getData());
@@ -442,7 +454,7 @@ public class OTSessionManager extends ReactContextBaseJavaModule
     private String getPublisherId(PublisherKit publisherKit) {
 
         Map<String, Publisher> publishers = sharedState.getPublishers();
-        for (Map.Entry<String, Publisher> entry: publishers.entrySet()) {
+        for (Map.Entry<String, Publisher> entry : publishers.entrySet()) {
             Publisher mPublisher = entry.getValue();
             if (mPublisher.equals(publisherKit)) {
                 return entry.getKey();
@@ -531,7 +543,7 @@ public class OTSessionManager extends ReactContextBaseJavaModule
         if (contains(jsEvents, sessionPreface + "onConnected") || contains(componentEvents, sessionPreface + "onConnected")) {
             sendEvent(this.getReactApplicationContext(), sessionPreface + "onConnected", null);
         }
-        Log.i(TAG, "onConnected: Connected to session: "+session.getSessionId());
+        Log.i(TAG, "onConnected: Connected to session: " + session.getSessionId());
         connectCallback = null;
     }
 
@@ -574,6 +586,7 @@ public class OTSessionManager extends ReactContextBaseJavaModule
         }
         Log.i(TAG, "Archive Stopped: " + id);
     }
+
     @Override
     public void onConnectionCreated(Session session, Connection connection) {
 
@@ -581,8 +594,8 @@ public class OTSessionManager extends ReactContextBaseJavaModule
             WritableMap connectionInfo = prepareConnectionMap(connection);
             sendEventMap(this.getReactApplicationContext(), sessionPreface + "onConnectionCreated", connectionInfo);
         }
-        Log.i(TAG, "onConnectionCreated: Connection Created: "+connection.getConnectionId());
-   }
+        Log.i(TAG, "onConnectionCreated: Connection Created: " + connection.getConnectionId());
+    }
 
     @Override
     public void onConnectionDestroyed(Session session, Connection connection) {
@@ -591,8 +604,9 @@ public class OTSessionManager extends ReactContextBaseJavaModule
             WritableMap connectionInfo = prepareConnectionMap(connection);
             sendEventMap(this.getReactApplicationContext(), sessionPreface + "onConnectionDestroyed", connectionInfo);
         }
-        Log.i(TAG, "onConnectionDestroyed: Connection Destroyed: "+connection.getConnectionId());
+        Log.i(TAG, "onConnectionDestroyed: Connection Destroyed: " + connection.getConnectionId());
     }
+
     @Override
     public void onStreamDropped(Session session, Stream stream) {
 
@@ -600,7 +614,7 @@ public class OTSessionManager extends ReactContextBaseJavaModule
             WritableMap streamInfo = prepareStreamMap(stream);
             sendEventMap(this.getReactApplicationContext(), sessionPreface + "onStreamDropped", streamInfo);
         }
-        Log.i(TAG, "onStreamDropped: Stream Dropped: "+stream.getStreamId() +" in session: "+session.getSessionId());
+        Log.i(TAG, "onStreamDropped: Stream Dropped: " + stream.getStreamId() + " in session: " + session.getSessionId());
     }
 
     @Override
@@ -608,13 +622,14 @@ public class OTSessionManager extends ReactContextBaseJavaModule
 
         String publisherId = getPublisherId(publisherKit);
         if (publisherId.length() > 0) {
-            String event = publisherId + ":" + publisherPreface + "onStreamCreated";;
+            String event = publisherId + ":" + publisherPreface + "onStreamCreated";
+            ;
             if (contains(jsEvents, event)) {
                 WritableMap streamInfo = prepareStreamMap(stream);
                 sendEventMap(this.getReactApplicationContext(), event, streamInfo);
             }
         }
-        Log.i(TAG, "onStreamCreated: Publisher Stream Created. Own stream "+stream.getStreamId());
+        Log.i(TAG, "onStreamCreated: Publisher Stream Created. Own stream " + stream.getStreamId());
 
     }
 
@@ -629,7 +644,7 @@ public class OTSessionManager extends ReactContextBaseJavaModule
                 sendEventMap(this.getReactApplicationContext(), event, streamInfo);
             }
         }
-        Log.i(TAG, "onStreamDestroyed: Publisher Stream Destroyed. Own stream "+stream.getStreamId());
+        Log.i(TAG, "onStreamDestroyed: Publisher Stream Destroyed. Own stream " + stream.getStreamId());
     }
 
     @Override
@@ -637,14 +652,14 @@ public class OTSessionManager extends ReactContextBaseJavaModule
 
         String publisherId = getPublisherId(publisherKit);
         if (publisherId.length() > 0) {
-            String event = publisherId + ":" + publisherPreface +  "onError";
+            String event = publisherId + ":" + publisherPreface + "onError";
             if (contains(jsEvents, event)) {
                 WritableMap errorInfo = prepareErrorMap(opentokError);
                 sendEventMap(this.getReactApplicationContext(), event, errorInfo);
             }
         }
-        Log.i(TAG, "onError: "+opentokError.getErrorDomain() + " : " +
-                opentokError.getErrorCode() +  " - "+opentokError.getMessage());
+        Log.i(TAG, "onError: " + opentokError.getErrorDomain() + " : " +
+                opentokError.getErrorCode() + " - " + opentokError.getMessage());
     }
 
     @Override
@@ -662,30 +677,30 @@ public class OTSessionManager extends ReactContextBaseJavaModule
     @Override
     public void onConnected(SubscriberKit subscriberKit) {
 
-        if (contains(jsEvents, subscriberPreface +  "onConnected")) {
-            sendEvent(this.getReactApplicationContext(), subscriberPreface +  "onConnected", null);
+        if (contains(jsEvents, subscriberPreface + "onConnected")) {
+            sendEvent(this.getReactApplicationContext(), subscriberPreface + "onConnected", null);
         }
-        Log.d(TAG, "onConnected: Subscriber connected. Stream: "+subscriberKit.getStream().getStreamId());
+        Log.d(TAG, "onConnected: Subscriber connected. Stream: " + subscriberKit.getStream().getStreamId());
     }
 
     @Override
     public void onDisconnected(SubscriberKit subscriberKit) {
 
-        if (contains(jsEvents, subscriberPreface +  "onDisconnected")) {
-            sendEvent(this.getReactApplicationContext(), subscriberPreface +  "onDisconnected", null);
+        if (contains(jsEvents, subscriberPreface + "onDisconnected")) {
+            sendEvent(this.getReactApplicationContext(), subscriberPreface + "onDisconnected", null);
         }
-        Log.d(TAG, "onDisconnected: Subscriber disconnected. Stream: "+subscriberKit.getStream().getStreamId());
+        Log.d(TAG, "onDisconnected: Subscriber disconnected. Stream: " + subscriberKit.getStream().getStreamId());
     }
 
     @Override
     public void onError(SubscriberKit subscriberKit, OpentokError opentokError) {
 
-        if (contains(jsEvents, subscriberPreface +  "onError")) {
+        if (contains(jsEvents, subscriberPreface + "onError")) {
             WritableMap errorInfo = prepareErrorMap(opentokError);
-            sendEventMap(this.getReactApplicationContext(), subscriberPreface +  "onError", errorInfo);
+            sendEventMap(this.getReactApplicationContext(), subscriberPreface + "onError", errorInfo);
         }
-        Log.e(TAG, "onError: "+opentokError.getErrorDomain() + " : " +
-                opentokError.getErrorCode() +  " - "+opentokError.getMessage());
+        Log.e(TAG, "onError: " + opentokError.getErrorDomain() + " : " +
+                opentokError.getErrorCode() + " - " + opentokError.getMessage());
 
     }
 
@@ -783,6 +798,7 @@ public class OTSessionManager extends ReactContextBaseJavaModule
             sendEventMap(this.getReactApplicationContext(), sessionPreface + "onStreamPropertyChanged", eventData);
         }
     }
+
     @Override
     public void onStreamHasVideoChanged(Session session, Stream stream, boolean Video) {
 
@@ -800,7 +816,7 @@ public class OTSessionManager extends ReactContextBaseJavaModule
             ConcurrentHashMap<String, Stream> mSubscriberStreams = sharedState.getSubscriberStreams();
             Stream mStream = mSubscriberStreams.get(stream.getStreamId());
             WritableMap oldVideoDimensions = Arguments.createMap();
-            if ( mStream != null ){
+            if (mStream != null) {
                 oldVideoDimensions.putInt("height", mStream.getVideoHeight());
                 oldVideoDimensions.putInt("width", mStream.getVideoWidth());
             }
