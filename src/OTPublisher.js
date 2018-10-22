@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { View, Platform } from 'react-native';
-import { createPublisher, checkAndroidPermissions, OT, removeNativeEvents, nativeEvents, setNativeEvents } from './OT';
+import { createPublisher, OT, removeNativeEvents, nativeEvents, setNativeEvents } from './OT';
 import { sanitizeProperties, sanitizePublisherEvents } from './helpers/OTPublisherHelper';
 import { handleError } from './OTError';
 import OTPublisherView from './views/OTPublisherView';
@@ -21,7 +21,7 @@ class OTPublisher extends Component {
     this.componentEvents = {
       sessionConnected: Platform.OS === 'android' ? 'session:onConnected' : 'session:sessionDidConnect',
     };
-    this.componentEventsArray = Object.values(this.componentEvents);    
+    this.componentEventsArray = Object.values(this.componentEvents);
   }
   componentWillMount() {
     const publisherEvents = sanitizePublisherEvents(this.state.publisherId, this.props.eventHandlers);
@@ -46,7 +46,7 @@ class OTPublisher extends Component {
         if (key === 'cameraPosition') {
           OT.changeCameraPosition(this.state.publisherId, value);
         } else {
-          OT[key](this.state.publisherId, value);          
+          OT[key](this.state.publisherId, value);
         }
       }
     };
@@ -60,8 +60,8 @@ class OTPublisher extends Component {
       if (error) {
         handleError(error);
       } else {
-        this.sessionConnected.remove();        
-        OT.removeJSComponentEvents(this.componentEventsArray);         
+        this.sessionConnected.remove();
+        OT.removeJSComponentEvents(this.componentEventsArray);
         const events = sanitizePublisherEvents(this.state.publisherId, this.props.eventHandlers);
         removeNativeEvents(events);
       }
@@ -73,17 +73,7 @@ class OTPublisher extends Component {
     }
   }
   createPublisher() {
-    if (Platform.OS === 'android') {
-      checkAndroidPermissions()
-        .then(() => {
-          this.initPublisher();
-        })
-        .catch((error) => {
-          handleError(error);
-        });
-    } else {
-      this.initPublisher();
-    }
+    this.initPublisher();
   }
   initPublisher() {
     const publisherProperties = sanitizeProperties(this.props.properties);

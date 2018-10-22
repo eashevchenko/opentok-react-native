@@ -10,7 +10,7 @@ import Foundation
 
 @objc(OTSessionManager)
 class OTSessionManager: RCTEventEmitter {
-  
+
   var connectCallback: RCTResponseSenderBlock?
   var jsEvents: [String] = [];
   var componentEvents: [String] = [];
@@ -25,11 +25,11 @@ class OTSessionManager: RCTEventEmitter {
     OTRN.sharedState.publishers.removeAll();
     OTRN.sharedState.subscribers.removeAll();
   }
-    
+
   override static func requiresMainQueueSetup() -> Bool {
     return true;
   }
-    
+
     @objc override func supportedEvents() -> [String] {
         let allEvents: [String] = ["\(sessionPreface)streamCreated", "\(sessionPreface)streamDestroyed", "\(sessionPreface)sessionDidConnect", "\(sessionPreface)sessionDidDisconnect", "\(sessionPreface)connectionCreated", "\(sessionPreface)connectionDestroyed", "\(sessionPreface)didFailWithError", "\(publisherPreface)streamCreated", "\(sessionPreface)signal", "\(publisherPreface)streamDestroyed", "\(publisherPreface)didFailWithError", "\(publisherPreface)audioLevelUpdated", "\(subscriberPreface)subscriberDidConnect", "\(subscriberPreface)subscriberDidDisconnect", "\(subscriberPreface)didFailWithError", "\(subscriberPreface)videoNetworkStatsUpdated", "\(subscriberPreface)audioNetworkStatsUpdated", "\(subscriberPreface)audioLevelUpdated", "\(subscriberPreface)subscriberVideoEnabled", "\(subscriberPreface)subscriberVideoDisabled", "\(subscriberPreface)subscriberVideoDisableWarning", "\(subscriberPreface)subscriberVideoDisableWarningLifted", "\(subscriberPreface)subscriberVideoDataReceived", "\(sessionPreface)archiveStartedWithId", "\(sessionPreface)archiveStoppedWithId", "\(sessionPreface)sessionDidBeginReconnecting", "\(sessionPreface)sessionDidReconnect", "\(sessionPreface)streamPropertyChanged"];
         return allEvents + jsEvents
@@ -37,7 +37,7 @@ class OTSessionManager: RCTEventEmitter {
   @objc func initSession(_ apiKey: String, sessionId: String) -> Void {
     OTRN.sharedState.session = OTSession(apiKey: apiKey, sessionId: sessionId, delegate: self)
   }
-  
+
   @objc func connect(_ token: String, callback: @escaping RCTResponseSenderBlock) -> Void {
     var error: OTError?
     OTRN.sharedState.session?.connect(withToken: token, error: &error)
@@ -47,7 +47,7 @@ class OTSessionManager: RCTEventEmitter {
       connectCallback = callback
     }
   }
-  
+
   @objc func initPublisher(_ publisherId: String, properties: Dictionary<String, Any>, callback: @escaping RCTResponseSenderBlock) -> Void {
     DispatchQueue.main.async {
       let publisherProperties = OTPublisherSettings()
@@ -81,7 +81,7 @@ class OTSessionManager: RCTEventEmitter {
       callback([NSNull()]);
     }
   }
-  
+
   @objc func publish(_ publisherId: String, callback: RCTResponseSenderBlock) -> Void {
     var error: OTError?
     guard let publisher = OTRN.sharedState.publishers[publisherId] else {
@@ -95,7 +95,7 @@ class OTSessionManager: RCTEventEmitter {
       callback([NSNull()])
     }
   }
-  
+
   @objc func subscribeToStream(_ streamId: String, properties: Dictionary<String, Any>, callback: @escaping RCTResponseSenderBlock) -> Void {
     var error: OTError?
     DispatchQueue.main.async {
@@ -105,6 +105,14 @@ class OTSessionManager: RCTEventEmitter {
       OTRN.sharedState.session?.subscribe(OTRN.sharedState.subscribers[streamId]!, error: &error)
       OTRN.sharedState.subscribers[streamId]?.subscribeToAudio = self.sanitizeBooleanProperty(properties["subscribeToAudio"] as Any);
       OTRN.sharedState.subscribers[streamId]?.subscribeToVideo = self.sanitizeBooleanProperty(properties["subscribeToVideo"] as Any);
+
+        if(OTRN.sharedState.subscriberStreams[streamId]?.videoType == OTStreamVideoType.camera) {
+           OTRN.sharedState.subscribers[streamId]?.viewScaleBehavior = OTVideoViewScaleBehavior.fill;
+        } else {
+           OTRN.sharedState.subscribers[streamId]?.viewScaleBehavior = OTVideoViewScaleBehavior.fit;
+        }
+
+
       if let err = error {
         callback([err.localizedDescription as Any])
       } else {
@@ -112,7 +120,7 @@ class OTSessionManager: RCTEventEmitter {
       }
     }
   }
-  
+
   @objc func removeSubscriber(_ streamId: String, callback: @escaping RCTResponseSenderBlock) -> Void {
     DispatchQueue.main.async {
       OTRN.sharedState.streamObservers.removeValue(forKey: streamId);
@@ -122,9 +130,9 @@ class OTSessionManager: RCTEventEmitter {
       OTRN.sharedState.subscriberStreams[streamId] = nil;
       callback([NSNull()])
     }
-    
+
   }
-  
+
   @objc func disconnectSession(_ callback: RCTResponseSenderBlock) -> Void {
     var error: OTError?
     OTRN.sharedState.session?.disconnect(&error)
@@ -136,32 +144,32 @@ class OTSessionManager: RCTEventEmitter {
       callback([NSNull()])
     }
   }
-  
+
   @objc func publishAudio(_ publisherId: String, pubAudio: Bool) -> Void {
     guard let publisher = OTRN.sharedState.publishers[publisherId] else { return }
     publisher.publishAudio = pubAudio;
   }
-  
+
   @objc func publishVideo(_ publisherId: String, pubVideo: Bool) -> Void {
     guard let publisher = OTRN.sharedState.publishers[publisherId] else { return }
     publisher.publishVideo = pubVideo;
   }
-  
+
   @objc func subscribeToAudio(_ streamId: String, subAudio: Bool) -> Void {
     guard let subscriber = OTRN.sharedState.subscribers[streamId] else { return }
     subscriber.subscribeToAudio = subAudio;
   }
-    
+
   @objc func subscribeToVideo(_ streamId: String, subVideo: Bool) -> Void {
     guard let subscriber = OTRN.sharedState.subscribers[streamId] else { return }
     subscriber.subscribeToVideo = subVideo;
   }
-  
+
   @objc func changeCameraPosition(_ publisherId: String, cameraPosition: String) -> Void {
     guard let publisher = OTRN.sharedState.publishers[publisherId] else { return }
     publisher.cameraPosition = cameraPosition == "front" ? .front : .back;
   }
-  
+
   @objc func setNativeEvents(_ events: Array<String>) -> Void {
     for event in events {
       if (!self.jsEvents.contains(event)) {
@@ -169,13 +177,13 @@ class OTSessionManager: RCTEventEmitter {
       }
     }
   }
-  
+
   @objc func setJSComponentEvents(_ events: Array<String>) -> Void {
     for event in events {
       self.componentEvents.append(event);
     }
   }
-  
+
   @objc func removeJSComponentEvents(_ events: Array<String>) -> Void {
     for event in events {
       if let i = self.componentEvents.index(of: event) {
@@ -183,7 +191,7 @@ class OTSessionManager: RCTEventEmitter {
       }
     }
   }
-  
+
   @objc func sendSignal(_ signal: Dictionary<String, String>, callback: RCTResponseSenderBlock ) -> Void {
     let connection: OTConnection? = nil
     var error: OTError?
@@ -194,7 +202,7 @@ class OTSessionManager: RCTEventEmitter {
       callback([NSNull()])
     }
   }
-  
+
   @objc func destroyPublisher(_ publisherId: String, callback: @escaping RCTResponseSenderBlock) -> Void {
     DispatchQueue.main.async {
       guard let publisher = OTRN.sharedState.publishers[publisherId] else { callback([NSNull()]); return }
@@ -214,7 +222,7 @@ class OTSessionManager: RCTEventEmitter {
       callback([err.localizedDescription as Any])
     }
   }
-  
+
   @objc func removeNativeEvents(_ events: Array<String>) -> Void {
     for event in events {
       if let i = self.jsEvents.index(of: event) {
@@ -222,7 +230,7 @@ class OTSessionManager: RCTEventEmitter {
       }
     }
   }
-  
+
   @objc func getSessionInfo(_ callback: RCTResponseSenderBlock) -> Void {
     guard let session = OTRN.sharedState.session else { callback([NSNull()]); return }
     var sessionInfo: Dictionary<String, Any> = [:];
@@ -233,17 +241,17 @@ class OTSessionManager: RCTEventEmitter {
     sessionInfo["connectionStatus"] = session.sessionConnectionStatus.rawValue;
     callback([sessionInfo]);
   }
-  
+
   func sanitizeBooleanProperty(_ property: Any) -> Bool {
     guard let prop = property as? Bool else { return true; }
     return prop;
   }
-  
+
   func sanitizeFrameRate(_ frameRate: Any) -> OTCameraCaptureFrameRate {
     guard let cameraFrameRate = frameRate as? Int else { return OTCameraCaptureFrameRate(rawValue: 30)!; }
     return OTCameraCaptureFrameRate(rawValue: cameraFrameRate)!;
   }
-  
+
   func sanitizeCameraResolution(_ resolution: Any) -> OTCameraCaptureResolution {
     guard let cameraResolution = resolution as? String else { return .medium };
     switch cameraResolution {
@@ -255,7 +263,7 @@ class OTSessionManager: RCTEventEmitter {
       return .medium;
     }
   }
-  
+
   func prepareJSEventData(_ stream: OTStream) -> Dictionary<String, Any> {
     var streamInfo: Dictionary<String, Any> = [:];
     guard OTRN.sharedState.session != nil else { return streamInfo }
@@ -270,7 +278,7 @@ class OTSessionManager: RCTEventEmitter {
     streamInfo["width"] = stream.videoDimensions.width;
     return streamInfo;
   }
-  
+
   func prepareJSConnectionEventData(_ connection: OTConnection) -> Dictionary<String, Any> {
     var connectionInfo: Dictionary<String, Any> = [:];
     connectionInfo["connectionId"] = connection.connectionId;
@@ -278,39 +286,39 @@ class OTSessionManager: RCTEventEmitter {
     connectionInfo["data"] = connection.data;
     return connectionInfo;
   }
-  
+
   func prepareJSErrorEventData(_ error: OTError) -> Dictionary<String, Any> {
     var errorInfo: Dictionary<String, Any> = [:];
     errorInfo["code"] = error.code;
     errorInfo["message"] = error.localizedDescription;
     return errorInfo;
   }
-  
+
   func resetPublisher(_ publisherId: String, publisher: OTPublisher) -> Void {
     publisher.view?.removeFromSuperview()
     publisher.delegate = nil;
     OTRN.sharedState.isPublishing[publisherId] = false;
   }
-  
+
   func getPublisherId(_ publisher: OTPublisher) -> String {
     let publisherIds = OTRN.sharedState.publishers.filter {$0.value == publisher}
     guard let publisherId = publisherIds.first else { return ""; }
     return publisherId.key;
   }
-    
+
   func convertDateToString(_ creationTime: Date) -> String {
     let dateFormatter: DateFormatter = DateFormatter();
     dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss";
     dateFormatter.timeZone = TimeZone(abbreviation: "UTC");
     return dateFormatter.string(from:creationTime);
   }
-  
+
   func emitEvent(_ event: String, data: Any) -> Void {
     if (self.jsEvents.contains(event) || self.componentEvents.contains(event)) {
       self.sendEvent(withName: event, body: data);
     }
   }
-    
+
   func prepareStreamPropertyChangedEventData(_ changedProperty: String, oldValue: Any, newValue: Any, stream: Dictionary<String, Any>) -> Dictionary<String, Any> {
     var streamPropertyEventData: Dictionary<String, Any> = [:];
     streamPropertyEventData["oldValue"] = oldValue;
@@ -330,7 +338,7 @@ class OTSessionManager: RCTEventEmitter {
         return "QualityChanged"
     }
   }
-  
+
   func checkAndEmitStreamPropertyChangeEvent(_ streamId: String, changedProperty: String, oldValue: Any, newValue: Any) {
     guard let stream = OTRN.sharedState.subscriberStreams[streamId] else { return }
     let streamInfo: Dictionary<String, Any> = prepareJSEventData(stream);
@@ -346,12 +354,12 @@ extension OTSessionManager: OTSessionDelegate {
     print("OTRN: Session connected")
     self.emitEvent("\(sessionPreface)sessionDidConnect", data: [NSNull()]);
   }
-  
+
   func sessionDidDisconnect(_ session: OTSession) {
     self.emitEvent("\(sessionPreface)sessionDidDisconnect", data: [NSNull()]);
     print("OTRN: Session disconnected")
   }
-  
+
   func session(_ session: OTSession, connectionCreated connection: OTConnection) {
     let connectionInfo = prepareJSConnectionEventData(connection);
     self.emitEvent("\(sessionPreface)connectionCreated", data: connectionInfo)
@@ -362,7 +370,7 @@ extension OTSessionManager: OTSessionDelegate {
     self.emitEvent("\(sessionPreface)connectionDestroyed", data: connectionInfo)
     print("OTRN Session: A connection was destroyed")
   }
-  
+
   func session(_ session: OTSession, archiveStartedWithId archiveId: String, name: String?) {
     var archiveInfo: Dictionary<String, String> = [:];
     archiveInfo["archiveId"] = archiveId;
@@ -370,22 +378,22 @@ extension OTSessionManager: OTSessionDelegate {
     self.emitEvent("\(sessionPreface)archiveStartedWithId", data: archiveInfo)
     print ("OTRN Session: Archive started with \(archiveId)")
   }
-  
+
   func session(_ session: OTSession, archiveStoppedWithId archiveId: String) {
     self.emitEvent("\(sessionPreface)archiveStoppedWithId", data: archiveId);
     print("OTRN Session: Archive stopped with \(archiveId)")
   }
-  
+
   func sessionDidBeginReconnecting(_ session: OTSession) {
     self.emitEvent("\(sessionPreface)sessionDidBeginReconnecting", data: [NSNull()])
     print("OTRN Session: Session did begin reconnecting")
   }
-  
+
   func sessionDidReconnect(_ session: OTSession) {
     self.emitEvent("\(sessionPreface)sessionDidReconnect", data: [NSNull()])
     print("OTRN Session: Session reconnected")
   }
-  
+
   func session(_ session: OTSession, streamCreated stream: OTStream) {
     OTRN.sharedState.subscriberStreams.updateValue(stream, forKey: stream.streamId)
     let streamInfo: Dictionary<String, Any> = prepareJSEventData(stream);
@@ -412,19 +420,19 @@ extension OTSessionManager: OTSessionDelegate {
     }
     OTRN.sharedState.streamObservers.updateValue([hasAudioObservation, hasVideoObservation, videoDimensionsObservation, videoTypeObservation], forKey: stream.streamId)
   }
-  
+
   func session(_ session: OTSession, streamDestroyed stream: OTStream) {
     let streamInfo: Dictionary<String, Any> = prepareJSEventData(stream);
     self.emitEvent("\(sessionPreface)streamDestroyed", data: streamInfo)
     print("OTRN: Session streamDestroyed: \(stream.streamId)")
   }
-  
+
   func session(_ session: OTSession, didFailWithError error: OTError) {
     let errorInfo: Dictionary<String, Any> = prepareJSErrorEventData(error);
     self.emitEvent("\(sessionPreface)didFailWithError", data: errorInfo)
     print("OTRN: Session Failed to connect: \(error.localizedDescription)")
   }
-  
+
   func session(_ session: OTSession, receivedSignalType type: String?, from connection: OTConnection?, with string: String?) {
     var signalData: Dictionary<String, Any> = [:];
     signalData["type"] = type;
@@ -445,7 +453,7 @@ extension OTSessionManager: OTPublisherDelegate {
     }
     print("OTRN: Publisher Stream created")
   }
-  
+
   func publisher(_ publisher: OTPublisherKit, streamDestroyed stream: OTStream) {
     let publisherId = self.getPublisherId(publisher as! OTPublisher);
     if (publisherId.count > 0) {
@@ -455,7 +463,7 @@ extension OTSessionManager: OTPublisherDelegate {
     }
     print("OTRN: Publisher Stream destroyed")
   }
-  
+
   func publisher(_ publisher: OTPublisherKit, didFailWithError error: OTError) {
     let publisherId = self.getPublisherId(publisher as! OTPublisher);
     if (publisherId.count > 0) {
@@ -480,18 +488,18 @@ extension OTSessionManager: OTSubscriberDelegate {
     self.emitEvent("\(subscriberPreface)subscriberDidConnect", data: [NSNull()]);
     print("OTRN: Subscriber connected")
   }
-  
+
   func subscriberDidDisconnect(fromStream subscriberKit: OTSubscriberKit) {
     self.emitEvent("\(subscriberPreface)subscriberDidDisconnect", data: [NSNull()]);
     print("OTRN: Subscriber disconnected")
   }
-  
+
   func subscriber(_ subscriber: OTSubscriberKit, didFailWithError error: OTError) {
     let errorInfo: Dictionary<String, Any> = prepareJSErrorEventData(error);
     self.emitEvent("\(subscriberPreface)didFailWithError", data: errorInfo)
     print("OTRN: Subscriber failed: \(error.localizedDescription)")
   }
-  
+
 }
 
 extension OTSessionManager: OTSubscriberKitNetworkStatsDelegate {
@@ -502,7 +510,7 @@ extension OTSessionManager: OTSubscriberKitNetworkStatsDelegate {
     videoStats["videoPacketsReceived"] = stats.videoPacketsReceived;
     self.emitEvent("\(subscriberPreface)videoNetworkStatsUpdated", data: videoStats);
   }
-  
+
   func subscriber(_ subscriber: OTSubscriberKit, audioNetworkStatsUpdated stats: OTSubscriberKitAudioNetworkStats) {
     var audioStats: Dictionary<String, Any> = [:];
     audioStats["audioPacketsLost"] = stats.audioPacketsLost;
@@ -510,23 +518,23 @@ extension OTSessionManager: OTSubscriberKitNetworkStatsDelegate {
     audioStats["audioPacketsReceived"] = stats.audioPacketsReceived;
     self.emitEvent("\(subscriberPreface)audioNetworkStatsUpdated", data: audioStats);
   }
-  
+
   func subscriberVideoEnabled(_ subscriber: OTSubscriberKit, reason: OTSubscriberVideoEventReason) {
     self.emitEvent("\(subscriberPreface)subscriberVideoEnabled", data: reason);
   }
-  
+
   func subscriberVideoDisabled(_ subscriber: OTSubscriberKit, reason: OTSubscriberVideoEventReason) {
     self.emitEvent("\(subscriberPreface)subscriberVideoDisabled", data: reason);
   }
-  
+
   func subscriberVideoDisableWarning(_ subscriber: OTSubscriberKit) {
     self.emitEvent("\(subscriberPreface)subscriberVideoDisableWarning", data: [NSNull()]);
   }
-  
+
   func subscriberVideoDisableWarningLifted(_ subscriber: OTSubscriberKit) {
     self.emitEvent("\(subscriberPreface)subscriberVideoDisableWarningLifted", data: [NSNull()]);
   }
-  
+
   func subscriberVideoDataReceived(_ subscriber: OTSubscriber) {
     self.emitEvent("\(subscriberPreface)subscriberVideoDataReceived", data: [NSNull()]);
   }
