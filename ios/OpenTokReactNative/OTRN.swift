@@ -16,6 +16,8 @@ class OTRN : NSObject {
   var publishers = [String: OTPublisher]()
   var isPublishing = [String: Bool]()
   var streamObservers = [String: [NSKeyValueObservation]]()
+  var tmpStreamId: String = ""
+    
   override init() {
     super.init()
   }

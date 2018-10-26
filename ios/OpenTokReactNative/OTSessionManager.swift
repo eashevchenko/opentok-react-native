@@ -99,20 +99,18 @@ class OTSessionManager: RCTEventEmitter {
   @objc func subscribeToStream(_ streamId: String, properties: Dictionary<String, Any>, callback: @escaping RCTResponseSenderBlock) -> Void {
     var error: OTError?
     DispatchQueue.main.async {
+        if(OTRN.sharedState.tmpStreamId.isEmpty) {
+            OTRN.sharedState.tmpStreamId = streamId;
+        }
+    
       OTRN.sharedState.subscribers.updateValue(OTSubscriber(stream: OTRN.sharedState.subscriberStreams[streamId]!, delegate: self)!, forKey: streamId)
       OTRN.sharedState.subscribers[streamId]?.networkStatsDelegate = self;
       OTRN.sharedState.subscribers[streamId]?.audioLevelDelegate = self;
       OTRN.sharedState.session?.subscribe(OTRN.sharedState.subscribers[streamId]!, error: &error)
       OTRN.sharedState.subscribers[streamId]?.subscribeToAudio = self.sanitizeBooleanProperty(properties["subscribeToAudio"] as Any);
       OTRN.sharedState.subscribers[streamId]?.subscribeToVideo = self.sanitizeBooleanProperty(properties["subscribeToVideo"] as Any);
-
-        if(OTRN.sharedState.subscriberStreams[streamId]?.videoType == OTStreamVideoType.camera) {
-           OTRN.sharedState.subscribers[streamId]?.viewScaleBehavior = OTVideoViewScaleBehavior.fill;
-        } else {
-           OTRN.sharedState.subscribers[streamId]?.viewScaleBehavior = OTVideoViewScaleBehavior.fit;
-        }
-
-
+        
+      OTRN.sharedState.subscribers[streamId]?.viewScaleBehavior = OTVideoViewScaleBehavior.fit;
       if let err = error {
         callback([err.localizedDescription as Any])
       } else {
@@ -120,6 +118,25 @@ class OTSessionManager: RCTEventEmitter {
       }
     }
   }
+    
+    @objc func recreateSubscriber(_ isHorizontal: Bool) -> Void {
+        var error: OTError?
+        DispatchQueue.main.async {
+            let streamId = OTRN.sharedState.tmpStreamId;
+                print("OTRN stream id: \(streamId)")
+                OTRN.sharedState.subscribers[streamId]?.networkStatsDelegate = self;
+                OTRN.sharedState.subscribers[streamId]?.audioLevelDelegate = self;
+                OTRN.sharedState.session?.subscribe(OTRN.sharedState.subscribers[streamId]!, error: &error)
+                OTRN.sharedState.subscribers[streamId]?.subscribeToAudio = self.sanitizeBooleanProperty(true);
+                OTRN.sharedState.subscribers[streamId]?.subscribeToVideo = self.sanitizeBooleanProperty(true);
+                
+                if(!isHorizontal) {
+                    OTRN.sharedState.subscribers[streamId]?.viewScaleBehavior = OTVideoViewScaleBehavior.fit;
+                } else {
+                    OTRN.sharedState.subscribers[streamId]?.viewScaleBehavior = OTVideoViewScaleBehavior.fill;
+                }
+        }
+    }
 
   @objc func removeSubscriber(_ streamId: String, callback: @escaping RCTResponseSenderBlock) -> Void {
     DispatchQueue.main.async {
