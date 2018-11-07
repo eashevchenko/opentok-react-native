@@ -159,6 +159,7 @@ public class OTSessionManager extends ReactContextBaseJavaModule
 
         ConcurrentHashMap<String, Stream> mSubscriberStreams = sharedState.getSubscriberStreams();
         ConcurrentHashMap<String, Subscriber> mSubscribers = sharedState.getSubscribers();
+        sharedState.setTmpStreamId(streamId);
         Session mSession = sharedState.getSession();
         Stream stream = mSubscriberStreams.get(streamId);
         Subscriber mSubscriber = new Subscriber.Builder(getReactApplicationContext(), stream).build();
@@ -167,13 +168,43 @@ public class OTSessionManager extends ReactContextBaseJavaModule
         mSubscriber.setAudioStatsListener(this);
         mSubscriber.setVideoStatsListener(this);
         mSubscriber.setVideoListener(this);
-        mSubscriber.setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
+        mSubscriber.setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FIT);
         mSubscriber.setSubscribeToAudio(properties.getBoolean("subscribeToAudio"));
         mSubscriber.setSubscribeToVideo(properties.getBoolean("subscribeToVideo"));
         mSubscribers.put(streamId, mSubscriber);
         mSession.subscribe(mSubscriber);
         callback.invoke();
 
+    }
+
+    @ReactMethod
+    public void recreateSubscriber(boolean isHorizontal) {
+
+        ConcurrentHashMap<String, Stream> mSubscriberStreams = sharedState.getSubscriberStreams();
+        ConcurrentHashMap<String, Subscriber> mSubscribers = sharedState.getSubscribers();
+        Session mSession = sharedState.getSession();
+
+        if(sharedState.getTmpStreamId() != null) {
+            Stream stream = mSubscriberStreams.get(sharedState.getTmpStreamId());
+            if(stream != null) {
+                Subscriber mSubscriber = new Subscriber.Builder(getReactApplicationContext(), stream).build();
+                mSubscriber.setSubscriberListener(this);
+                mSubscriber.setAudioLevelListener(this);
+                mSubscriber.setAudioStatsListener(this);
+                mSubscriber.setVideoStatsListener(this);
+                mSubscriber.setVideoListener(this);
+                if(isHorizontal) {
+                    mSubscriber.setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
+                } else {
+                    mSubscriber.setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FIT);
+                }
+
+                mSubscriber.setSubscribeToAudio(true);
+                mSubscriber.setSubscribeToVideo(true);
+                mSubscribers.put(sharedState.getTmpStreamId(), mSubscriber);
+                mSession.subscribe(mSubscriber);
+            }
+        }
     }
 
     @ReactMethod

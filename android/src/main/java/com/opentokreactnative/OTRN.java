@@ -8,6 +8,7 @@ import com.opentok.android.Stream;
 import com.opentok.android.Subscriber;
 
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Created by manik on 1/10/18.
@@ -23,6 +24,8 @@ public class OTRN {
     private ConcurrentHashMap<String, Publisher> publishers = new ConcurrentHashMap<>();
     private ConcurrentHashMap<String, FrameLayout> subscriberViewContainers = new ConcurrentHashMap<>();
     private ConcurrentHashMap<String, FrameLayout> publisherViewContainers = new ConcurrentHashMap<>();
+
+    private AtomicReference<String> tmpStreamId = new AtomicReference<>();
 
     public static synchronized OTRN getSharedState() {
 
@@ -66,6 +69,14 @@ public class OTRN {
     public ConcurrentHashMap<String, FrameLayout> getPublisherViewContainers() {
 
         return this.publisherViewContainers;
+    }
+
+    public String getTmpStreamId(){
+        return tmpStreamId.get();
+    }
+
+    public void setTmpStreamId(String streamId) {
+        tmpStreamId.set(streamId);
     }
 
     private OTRN() {}

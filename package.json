@@ -17,7 +17,7 @@
   "_requiredBy": [
     "/"
   ],
-  "_resolved": "git+https://github.com/eashevchenko/opentok-react-native.git#d13da66b5989f7249bbaf65b7824e0b4294735c8",
+  "_resolved": "git+https://github.com/eashevchenko/opentok-react-native.git#308f82274736ff626d8e607e2bdb9ff4b7476ab0",
   "_spec": "opentok-react-native@git+https://github.com/eashevchenko/opentok-react-native.git",
   "_where": "/Users/eugene/Work/SWAN/Projects/sonicxpress/mobile-app",
   "author": {
