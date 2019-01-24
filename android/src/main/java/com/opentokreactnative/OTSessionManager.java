@@ -117,6 +117,18 @@ public class OTSessionManager extends ReactContextBaseJavaModule
                     .capturer(capturer)
                     .build();
             mPublisher.setPublisherVideoType(PublisherKit.PublisherKitVideoType.PublisherKitVideoTypeScreen);
+        } else if(videoSource.equals("webcam")) {
+            OTWebcamCapturer webcamCapturer = new OTWebcamCapturer(this.getReactApplicationContext());
+
+            mPublisher = new Publisher.Builder(this.getReactApplicationContext())
+                    .audioTrack(audioTrack)
+                    .videoTrack(videoTrack)
+                    .name(name)
+                    .audioBitrate(audioBitrate)
+                    .resolution(Publisher.CameraCaptureResolution.valueOf(resolution))
+                    .frameRate(Publisher.CameraCaptureFrameRate.valueOf(frameRate))
+                    .capturer(webcamCapturer)
+                    .build();
         } else {
             mPublisher = new Publisher.Builder(this.getReactApplicationContext())
                     .audioTrack(audioTrack)

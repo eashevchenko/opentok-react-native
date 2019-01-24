@@ -1,26 +1,51 @@
+buildscript {
+    repositories {
+        jcenter()
+        maven {
+            url 'https://maven.google.com/'
+            name 'Google'
+        }
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:2.2.2'
+    }
+}
+
 apply plugin: 'com.android.library'
 
-def _ext = rootProject.ext
-def _reactNativeVersion = _ext.has('reactNative') ? _ext.reactNative : '+'
-def _compileSdkVersion = _ext.has('compileSdkVersion') ? _ext.compileSdkVersion : 23
-def _buildToolsVersion = _ext.has('buildToolsVersion') ? _ext.buildToolsVersion : '23.0.1'
-def _minSdkVersion = _ext.has('minSdkVersion') ? _ext.minSdkVersion : 16
-def _targetSdkVersion = _ext.has('targetSdkVersion') ? _ext.targetSdkVersion : 23
-
 android {
-    compileSdkVersion _compileSdkVersion
-    buildToolsVersion _buildToolsVersion
+    compileSdkVersion 23
+    buildToolsVersion "23.0.3"
 
     defaultConfig {
-        minSdkVersion _minSdkVersion
-        targetSdkVersion _targetSdkVersion
+        minSdkVersion 16
+        targetSdkVersion 22
         versionCode 1
         versionName "1.0"
+        ndk {
+            abiFilters "armeabi-v7a", "x86"
+        }
+    }
+    lintOptions {
+        warning 'InvalidPackage'
+    }
+}
+
+repositories {
+    mavenCentral()
+    jcenter()
+    maven {
+        url 'https://tokbox.bintray.com/maven'
+    }
+    maven {
+        url 'https://maven.google.com/'
+        name 'Google'
     }
 }
 
 dependencies {
     compile fileTree(dir: "libs", include: ["*.jar"])
-    compile "com.facebook.react:react-native:${_reactNativeVersion}"  // From node_modules
-    compile 'com.opentok.android:opentok-android-sdk:2.14.0'
+    compile 'com.facebook.react:react-native:+'
+    compile 'com.opentok.android:opentok-android-sdk:2.15.3'
+    compile project(':libuvccamera')
 }
